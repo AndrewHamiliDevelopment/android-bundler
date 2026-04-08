@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  android-bundler:
+    build: .
+    container_name: android-bundler
+    volumes:
+      - ./project:/workspace/project
+      - ./output:/workspace/output
+    environment:
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+    working_dir: /workspace
+    command: ["/workspace/build.sh"]
