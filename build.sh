@@ -33,6 +33,8 @@ fi
 if [ "$IS_EXPO" = "true" ]; then
   echo "Expo project detected. Running npm install..."
   npm install --verbose
+  npx expo prebuild --clean
+  npx expo prebuild --platform android
   echo "npm install complete. Switching to android directory for Gradle build..."
   cd android
 fi
