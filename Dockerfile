@@ -35,7 +35,9 @@ RUN yes | sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses && \
       "platform-tools" \
       "platforms;android-34" \
       "build-tools;34.0.0" \
-      "cmdline-tools;latest"
+      "cmdline-tools;latest" \
+      "cmake;3.22.1" \
+      "ndk;26.1.10909125"
 
 # Create workspace directories
 RUN mkdir -p /workspace/project /workspace/output
