@@ -22,6 +22,20 @@ fi
 
 cd "$PROJECT_DIR"
 
+# Detect if this is an Expo project
+IS_EXPO=false
+if [ -f "app.json" ] || [ -f "app.config.js" ] || [ -f "app.config.ts" ]; then
+  if grep -q '"expo"' app.json 2>/dev/null || [ -f "app.config.js" ] || [ -f "app.config.ts" ]; then
+    IS_EXPO=true
+  fi
+fi
+
+if [ "$IS_EXPO" = "true" ]; then
+  echo "Expo project detected. Running npm install..."
+  npm install
+  echo "npm install complete. Switching to android directory for Gradle build..."
+  cd android
+fi
 
 # Clean previous builds
 if [ -f ./gradlew ]; then
