@@ -6,6 +6,7 @@ services:
     volumes:
       - ./project:/workspace/project
       - ./output:/workspace/output
+      - ./.gradle-cache:/root/.gradle
     environment:
       - ANDROID_SDK_ROOT=/opt/android-sdk
     working_dir: /workspace
