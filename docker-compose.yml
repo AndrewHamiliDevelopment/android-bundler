@@ -9,6 +9,7 @@ services:
       - ./.gradle-cache:/root/.gradle
     environment:
       - ANDROID_SDK_ROOT=/opt/android-sdk
+      - BUILD_TYPE=${BUILD_TYPE}
       - JKS_PATH=${JKS_PATH}
       - JKS_ALIAS=${JKS_ALIAS}
       - JKS_PASSWORD=${JKS_PASSWORD}
