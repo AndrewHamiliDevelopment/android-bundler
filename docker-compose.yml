@@ -9,5 +9,9 @@ services:
       - ./.gradle-cache:/root/.gradle
     environment:
       - ANDROID_SDK_ROOT=/opt/android-sdk
+      - JKS_PATH=${JKS_PATH}
+      - JKS_ALIAS=${JKS_ALIAS}
+      - JKS_PASSWORD=${JKS_PASSWORD}
+      - JKS_KEY_PASSWORD=${JKS_KEY_PASSWORD}
     working_dir: /workspace
     command: ["/workspace/build.sh"]
