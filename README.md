@@ -15,23 +15,31 @@ This project provides a Docker container for building Android APK and AAB files 
 
 2. **Choose build type:**
    - By default, the container builds a debug APK/AAB.
-   - To build a release APK/AAB, set the `BUILD_TYPE` environment variable to `release` and provide your JKS signing credentials (see below).
+    - To build a release APK/AAB, set `BUILD_TYPE=release` in a `.env` file and provide your JKS signing credentials (see below).
 
 3. **Build and run the container:**
-   - For debug build (default):
+    - Create a `.env` file in this directory (same level as `docker-compose.yml`). Docker Compose loads it automatically.
+    - Example `.env` for debug build (default):
+       ```env
+       BUILD_TYPE=debug
+       ```
+    - Run in the background:
      ```sh
-     docker-compose up --build
+          docker compose up -d --build
      ```
-   - For release build (with signing):
-     ```sh
-     docker-compose run -e BUILD_TYPE=release \
-       -e JKS_PATH=/workspace/keystore/my-release-key.jks \
-       -e JKS_ALIAS=your_alias \
-       -e JKS_PASSWORD=your_store_password \
-       -e JKS_KEY_PASSWORD=your_key_password \
-       android-bundler
+    - Example `.env` for release build (with signing):
+       ```env
+       BUILD_TYPE=release
+       JKS_PATH=/workspace/project/keystore/my-release-key.jks
+       JKS_ALIAS=your_alias
+       JKS_PASSWORD=your_store_password
+       JKS_KEY_PASSWORD=your_key_password
      ```
-     - Mount your JKS file into the container (e.g., place it in a `keystore` folder and mount it via Docker Compose or bind mount).
+      - Then run in the background:
+       ```sh
+             docker compose up -d --build
+       ```
+    - Make sure your JKS file is accessible inside the container. A simple option is to place it under `project/keystore/` so it is available at `/workspace/project/keystore/...`.
 
 4. **Retrieve your builds:**
    - After the build completes, find your APK and AAB files in the `output` folder.
@@ -50,13 +58,13 @@ This project provides a Docker container for building Android APK and AAB files 
    - No signing required. Produces debug APK/AAB.
 - **Release build:**
    - Requires a Java Keystore (JKS) for signing.
-   - Set the following environment variables:
+   - Set the following variables in `.env`:
       - `BUILD_TYPE=release`
       - `JKS_PATH` — Path to your JKS file inside the container
       - `JKS_ALIAS` — Alias for your key
       - `JKS_PASSWORD` — Keystore password
       - `JKS_KEY_PASSWORD` — Key password
-   - Example: see usage above.
+   - Example: see `.env` example in usage above.
 
 ## Notes
 - The container expects a Gradle-based Android project with a `gradlew` script.
