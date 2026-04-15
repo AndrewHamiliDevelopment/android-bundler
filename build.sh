@@ -11,6 +11,8 @@ BUILD_TYPE=${BUILD_TYPE:-debug}
 RUN_GRADLE_CLEAN=${RUN_GRADLE_CLEAN:-false}
 # Whether to clear Gradle transform caches before build (default: false)
 RESET_GRADLE_TRANSFORMS_CACHE=${RESET_GRADLE_TRANSFORMS_CACHE:-false}
+# Whether to exclude known problematic native clean tasks during assemble/bundle (default: true)
+EXCLUDE_NATIVE_CLEAN_TASKS=${EXCLUDE_NATIVE_CLEAN_TASKS:-true}
 # JKS signing variables for release
 JKS_PATH=${JKS_PATH:-}
 JKS_ALIAS=${JKS_ALIAS:-}
@@ -48,6 +50,13 @@ if [ "$IS_EXPO" = "true" ]; then
   cd android
 fi
 
+GRADLE_EXTRA_ARGS=""
+if [ "$EXCLUDE_NATIVE_CLEAN_TASKS" = "true" ]; then
+  # Some RN/Expo native modules register clean tasks that fail when transformed prefab cache entries are stale.
+  GRADLE_EXTRA_ARGS="-x clean -x externalNativeBuildCleanDebug -x externalNativeBuildCleanRelease -x cleanCmakeCache"
+  echo "Excluding native clean tasks: $GRADLE_EXTRA_ARGS"
+fi
+
 # Clean previous builds
 if [ -f ./gradlew ]; then
   if [ "$RUN_GRADLE_CLEAN" = "true" ]; then
@@ -61,7 +70,7 @@ if [ -f ./gradlew ]; then
       echo "JKS_PATH, JKS_ALIAS, JKS_PASSWORD, and JKS_KEY_PASSWORD must be set for release builds."
       exit 1
     fi
-    ./gradlew assembleRelease bundleRelease \
+    ./gradlew assembleRelease bundleRelease $GRADLE_EXTRA_ARGS \
       -Pandroid.injected.signing.store.file="$JKS_PATH" \
       -Pandroid.injected.signing.store.password="$JKS_PASSWORD" \
       -Pandroid.injected.signing.key.alias="$JKS_ALIAS" \
@@ -69,7 +78,7 @@ if [ -f ./gradlew ]; then
     cp -v app/build/outputs/apk/release/*.apk "$OUTPUT_DIR" 2>/dev/null || true
     cp -v app/build/outputs/bundle/release/*.aab "$OUTPUT_DIR" 2>/dev/null || true
   else
-    ./gradlew assembleDebug bundleDebug
+    ./gradlew assembleDebug bundleDebug $GRADLE_EXTRA_ARGS
     cp -v app/build/outputs/apk/debug/*.apk "$OUTPUT_DIR" 2>/dev/null || true
     cp -v app/build/outputs/bundle/debug/*.aab "$OUTPUT_DIR" 2>/dev/null || true
   fi

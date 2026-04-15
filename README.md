@@ -78,6 +78,7 @@ You can set these in `.env`:
 
 - `RUN_GRADLE_CLEAN=true` to run `./gradlew clean` before assemble/bundle.
 - `RESET_GRADLE_TRANSFORMS_CACHE=true` to clear `/root/.gradle/caches/transforms-*` before the build.
+- `EXCLUDE_NATIVE_CLEAN_TASKS=true` to skip `externalNativeBuildClean*` and related clean tasks during assemble/bundle (recommended for React Native/Expo).
 
 
 ## Troubleshooting
@@ -96,6 +97,7 @@ Use this recovery flow:
 1. Set these in `.env`:
    - `RUN_GRADLE_CLEAN=false`
    - `RESET_GRADLE_TRANSFORMS_CACHE=true`
+   - `EXCLUDE_NATIVE_CLEAN_TASKS=true`
 2. Rebuild and run again:
    ```sh
    docker compose up --build
