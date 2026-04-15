@@ -70,12 +70,37 @@ This project provides a Docker container for building Android APK and AAB files 
 - The container expects a Gradle-based Android project with a `gradlew` script.
 - The `project` folder is mounted read-only; the `output` folder is writable.
 - The container always pulls the latest project contents on each run.
+- By default, the script does not run `./gradlew clean` to avoid failing native clean tasks in some React Native projects.
+
+## Optional Build Flags
+
+You can set these in `.env`:
+
+- `RUN_GRADLE_CLEAN=true` to run `./gradlew clean` before assemble/bundle.
+- `RESET_GRADLE_TRANSFORMS_CACHE=true` to clear `/root/.gradle/caches/transforms-*` before the build.
 
 
 ## Troubleshooting
 - If you see errors about missing `gradlew`, ensure your project is complete and in the correct folder.
 - For release builds, ensure all JKS environment variables are set and the JKS file is accessible inside the container.
 - Check the `output` folder for build artifacts and logs.
+
+### React Native CMake error: includes non-existent path
+
+If you hit errors like:
+
+- `Imported target "ReactAndroid::reactnative" includes non-existent path .../prefab/modules/reactnative/include`
+
+Use this recovery flow:
+
+1. Set these in `.env`:
+   - `RUN_GRADLE_CLEAN=false`
+   - `RESET_GRADLE_TRANSFORMS_CACHE=true`
+2. Rebuild and run again:
+   ```sh
+   docker compose up --build
+   ```
+3. After a successful run, set `RESET_GRADLE_TRANSFORMS_CACHE=false` again for faster subsequent builds.
 
 ---
 

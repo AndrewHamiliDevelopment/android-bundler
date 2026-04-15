@@ -7,6 +7,10 @@ OUTPUT_DIR="/workspace/output"
 
 # Build type: debug or release (default: debug)
 BUILD_TYPE=${BUILD_TYPE:-debug}
+# Whether to run ./gradlew clean before assemble/bundle (default: false)
+RUN_GRADLE_CLEAN=${RUN_GRADLE_CLEAN:-false}
+# Whether to clear Gradle transform caches before build (default: false)
+RESET_GRADLE_TRANSFORMS_CACHE=${RESET_GRADLE_TRANSFORMS_CACHE:-false}
 # JKS signing variables for release
 JKS_PATH=${JKS_PATH:-}
 JKS_ALIAS=${JKS_ALIAS:-}
@@ -21,6 +25,11 @@ fi
 
 
 cd "$PROJECT_DIR"
+
+if [ "$RESET_GRADLE_TRANSFORMS_CACHE" = "true" ]; then
+  echo "RESET_GRADLE_TRANSFORMS_CACHE=true, deleting Gradle transforms cache..."
+  rm -rf /root/.gradle/caches/transforms-* 2>/dev/null || true
+fi
 
 # Detect if this is an Expo project
 IS_EXPO=false
@@ -41,7 +50,11 @@ fi
 
 # Clean previous builds
 if [ -f ./gradlew ]; then
-  ./gradlew clean
+  if [ "$RUN_GRADLE_CLEAN" = "true" ]; then
+    ./gradlew clean
+  else
+    echo "Skipping ./gradlew clean (set RUN_GRADLE_CLEAN=true to enable)."
+  fi
   if [ "$BUILD_TYPE" = "release" ]; then
     # Check for JKS variables
     if [ -z "$JKS_PATH" ] || [ -z "$JKS_ALIAS" ] || [ -z "$JKS_PASSWORD" ] || [ -z "$JKS_KEY_PASSWORD" ]; then

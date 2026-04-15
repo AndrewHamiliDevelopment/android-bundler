@@ -9,6 +9,8 @@ services:
     environment:
       - ANDROID_SDK_ROOT=/opt/android-sdk
       - BUILD_TYPE=${BUILD_TYPE}
+      - RUN_GRADLE_CLEAN=${RUN_GRADLE_CLEAN:-false}
+      - RESET_GRADLE_TRANSFORMS_CACHE=${RESET_GRADLE_TRANSFORMS_CACHE:-false}
       - JKS_PATH=${JKS_PATH}
       - JKS_ALIAS=${JKS_ALIAS}
       - JKS_PASSWORD=${JKS_PASSWORD}
