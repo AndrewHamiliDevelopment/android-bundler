@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     zip \
+    vim \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     # Install Node.js (LTS)
