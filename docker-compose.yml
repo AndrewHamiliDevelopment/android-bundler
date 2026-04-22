@@ -8,7 +8,11 @@ services:
       - ./output:/var/www/output:ro
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
   android-bundler:
-    build: .
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
+    build:
+      context: .
+      args:
+        TARGETPLATFORM: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: android-bundler
     volumes:
       - ./project:/workspace/project
@@ -17,6 +21,7 @@ services:
     environment:
       - ANDROID_SDK_ROOT=/opt/android-sdk
       - BUILD_TYPE=${BUILD_TYPE}
+      - NODE_ENV=${NODE_ENV:-production}
       - RUN_GRADLE_CLEAN=${RUN_GRADLE_CLEAN:-false}
       - RESET_GRADLE_TRANSFORMS_CACHE=${RESET_GRADLE_TRANSFORMS_CACHE:-false}
       - EXCLUDE_NATIVE_CLEAN_TASKS=${EXCLUDE_NATIVE_CLEAN_TASKS:-true}

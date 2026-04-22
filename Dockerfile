@@ -1,5 +1,6 @@
 # Android Bundler Dockerfile
-FROM ubuntu:22.04
+ARG TARGETPLATFORM=linux/amd64
+FROM --platform=$TARGETPLATFORM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV ANDROID_SDK_ROOT=/opt/android-sdk
@@ -15,6 +16,7 @@ RUN apt-get update && apt-get install -y \
     zip \
     vim \
     ca-certificates \
+    rsync \
     && rm -rf /var/lib/apt/lists/* \
     # Install Node.js (LTS)
     && curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
@@ -36,7 +38,6 @@ RUN yes | sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses && \
       "platform-tools" \
       "platforms;android-34" \
       "build-tools;34.0.0" \
-      "cmdline-tools;latest" \
       "cmake;3.22.1" \
       "ndk;26.1.10909125"
 
