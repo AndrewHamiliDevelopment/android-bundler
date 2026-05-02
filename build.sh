@@ -1,9 +1,8 @@
 #!/bin/bash
-set -euo pipefail
+set -e
 
 
-SOURCE_PROJECT_DIR="/workspace/project"
-BUILD_PROJECT_DIR="/tmp/project-build"
+PROJECT_DIR="/workspace/project"
 OUTPUT_DIR="/workspace/output"
 
 # Build type: debug or release (default: debug)
@@ -21,18 +20,13 @@ JKS_PASSWORD=${JKS_PASSWORD:-}
 JKS_KEY_PASSWORD=${JKS_KEY_PASSWORD:-}
 
 
-if [ ! -d "$SOURCE_PROJECT_DIR" ]; then
-  echo "Project directory $SOURCE_PROJECT_DIR does not exist. Please mount your Android project to ./project."
+if [ ! -d "$PROJECT_DIR" ]; then
+  echo "Project directory $PROJECT_DIR does not exist. Please mount your Android project to ./project."
   exit 1
 fi
 
-rm -rf "$BUILD_PROJECT_DIR"
-mkdir -p "$BUILD_PROJECT_DIR"
 
-# Build from a container-local copy to avoid Gradle/AGP permission issues on bind mounts.
-cp -R "$SOURCE_PROJECT_DIR"/. "$BUILD_PROJECT_DIR"
-
-cd "$BUILD_PROJECT_DIR"
+cd "$PROJECT_DIR"
 
 if [ "$RESET_GRADLE_TRANSFORMS_CACHE" = "true" ]; then
   echo "RESET_GRADLE_TRANSFORMS_CACHE=true, deleting Gradle transforms cache..."
@@ -47,9 +41,26 @@ if [ -f "app.json" ] || [ -f "app.config.js" ] || [ -f "app.config.ts" ]; then
   fi
 fi
 
+# --- Extract version info ---
+VERSION=""
+VERSION_CODE=""
+VERSION_NAME=""
+if [ "$IS_EXPO" = "true" ] && [ -f "app.json" ]; then
+  VERSION=$(node -e "const a=require('./app.json');process.stdout.write((a.expo&&a.expo.version)||'')" 2>/dev/null || echo "")
+  VERSION_CODE=$(node -e "const a=require('./app.json');const an=(a.expo&&a.expo.android)||{};process.stdout.write(String(an.versionCode||0))" 2>/dev/null || echo "0")
+  VERSION_NAME=$(node -e "const a=require('./app.json');const an=(a.expo&&a.expo.android)||{};process.stdout.write(an.versionName||(a.expo&&a.expo.version)||'')" 2>/dev/null || echo "")
+elif [ -f "app/build.gradle" ]; then
+  VERSION_CODE=$(grep -m1 'versionCode' app/build.gradle | sed 's/[^0-9]*\([0-9][0-9]*\).*/\1/')
+  VERSION_NAME=$(grep -m1 'versionName' app/build.gradle | sed 's/.*versionName[[:space:]]*"\([^"]*\)".*/\1/')
+  VERSION="$VERSION_NAME"
+fi
+[ -z "$VERSION_CODE" ] && VERSION_CODE="0"
+[ -z "$VERSION_NAME" ] && VERSION_NAME="0.0.0"
+[ -z "$VERSION" ] && VERSION="0.0.0"
+echo "Version info: VERSION=$VERSION, VERSION_CODE=$VERSION_CODE, VERSION_NAME=$VERSION_NAME"
+
 if [ "$IS_EXPO" = "true" ]; then
   echo "Expo project detected. Running npm install..."
-  export NODE_ENV=${NODE_ENV:-production}
   npm install --verbose
   npx expo prebuild --clean
   npx expo prebuild --platform android
@@ -82,12 +93,24 @@ if [ -f ./gradlew ]; then
       -Pandroid.injected.signing.store.password="$JKS_PASSWORD" \
       -Pandroid.injected.signing.key.alias="$JKS_ALIAS" \
       -Pandroid.injected.signing.key.password="$JKS_KEY_PASSWORD"
-    cp -v app/build/outputs/apk/release/*.apk "$OUTPUT_DIR" 2>/dev/null || true
-    cp -v app/build/outputs/bundle/release/*.aab "$OUTPUT_DIR" 2>/dev/null || true
+    for f in app/build/outputs/apk/release/*.apk; do
+      [ -e "$f" ] || continue
+      mv -v "$f" "$OUTPUT_DIR/app-release-${VERSION}-${VERSION_CODE}-${VERSION_NAME}.apk"
+    done
+    for f in app/build/outputs/bundle/release/*.aab; do
+      [ -e "$f" ] || continue
+      mv -v "$f" "$OUTPUT_DIR/app-release-${VERSION}-${VERSION_CODE}-${VERSION_NAME}.aab"
+    done
   else
     ./gradlew assembleDebug bundleDebug $GRADLE_EXTRA_ARGS
-    cp -v app/build/outputs/apk/debug/*.apk "$OUTPUT_DIR" 2>/dev/null || true
-    cp -v app/build/outputs/bundle/debug/*.aab "$OUTPUT_DIR" 2>/dev/null || true
+    for f in app/build/outputs/apk/debug/*.apk; do
+      [ -e "$f" ] || continue
+      mv -v "$f" "$OUTPUT_DIR/app-debug-${VERSION}-${VERSION_CODE}-${VERSION_NAME}.apk"
+    done
+    for f in app/build/outputs/bundle/debug/*.aab; do
+      [ -e "$f" ] || continue
+      mv -v "$f" "$OUTPUT_DIR/app-debug-${VERSION}-${VERSION_CODE}-${VERSION_NAME}.aab"
+    done
   fi
 else
   echo "No gradlew found in project. Please ensure this is a valid Android project."
